@@ -19,10 +19,16 @@ export type Mail = {
 }
 
 export type MailInput = Omit<Mail, 'id' | 'date' | 'direction' | 'read'>
-export type RawLetterInput = {
-  text?: string
-  fileName?: string
-}
+/** Вебхук: либо только текст, либо только файл (PDF/TXT как base64). */
+export type RawLetterInput =
+  | { kind: 'text'; text: string }
+  | {
+      kind: 'file'
+      fileName: string
+      fileMimeType: string
+      /** Содержимое файла в base64 без префикса data:... */
+      fileBase64: string
+    }
 
 /** Ответ AI/n8n после разбора письма (как в webhook). */
 export type AIResponse = {
@@ -146,6 +152,7 @@ export function aiResponseToMail(ai: AIResponse): Mail {
     direction: 'out',
     read: true,
     text: ai.mailText || '',
+    supportResponse: ai.supportResponse
   }
 }
 
@@ -191,13 +198,25 @@ export async function sendLetterToWebhook(
     throw new Error('Webhook URL is empty')
   }
 
+  const body =
+    input.kind === 'text'
+      ? {
+          text: input.text,
+        }
+      : {
+        binary: {
+          pdf: {
+            data: input.fileBase64,  // строка base64
+            mimeType: input.fileMimeType,
+            fileName: input.fileName,
+          }
+        },
+        }
+
   const response = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fileName: input.fileName ?? null,
-      text: input.text ?? null,
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -233,6 +252,7 @@ export async function generateIncomingMail() {
     direction: 'in',
     read: false,
     text: `Симуляция входящего письма #${uid}`,
+    supportResponse: null,
   }
 
   return incomingMail

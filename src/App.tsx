@@ -101,8 +101,16 @@ function App() {
   }, [mails])
 
   const handleCreate = async () => {
-    if (!letterText.trim() && !letterFile) {
+    const trimmedText = letterText.trim()
+    const hasText = trimmedText.length > 0
+    const hasFile = letterFile != null
+
+    if (!hasText && !hasFile) {
       setError('Добавьте текст письма или PDF/TXT файл')
+      return
+    }
+    if (hasText && hasFile) {
+      setError('Укажите либо текст письма, либо файл — не оба варианта сразу')
       return
     }
 
@@ -110,16 +118,30 @@ function App() {
       setSubmitting(true)
 
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined
-      const fileText = letterFile?.type === 'text/plain' ? await letterFile.text() : ''
-      const combinedText = [letterText.trim(), fileText.trim()].filter(Boolean).join('\n\n')
 
-      const newMail = await sendLetterToWebhook(
-        {
-          text: combinedText || undefined,
-          fileName: letterFile?.name,
-        },
-        webhookUrl ?? '',
-      )
+      const fileToBase64 = (file: File) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const s = reader.result as string
+            const comma = s.indexOf(',')
+            resolve(comma >= 0 ? s.slice(comma + 1) : s)
+          }
+          reader.onerror = () => reject(reader.error ?? new Error('Ошибка чтения файла'))
+          reader.readAsDataURL(file)
+        })
+
+      const payload =
+        hasFile && letterFile
+          ? {
+              kind: 'file' as const,
+              fileName: letterFile.name,
+              fileMimeType: letterFile.type,
+              fileBase64: await fileToBase64(letterFile),
+            }
+          : { kind: 'text' as const, text: trimmedText }
+
+      const newMail = await sendLetterToWebhook(payload, webhookUrl ?? '')
 
       setMails((prev) => [newMail, ...prev])
       setCreateOpen(false)
@@ -350,6 +372,9 @@ function App() {
             </Button>
             <Typography variant="body2" color="text.secondary">
               {letterFile ? `Файл выбран: ${letterFile.name}` : 'Файл не выбран'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              В вебхук уходит либо только текст из поля выше, либо только выбранный файл.
             </Typography>
           </Stack>
         </DialogContent>
