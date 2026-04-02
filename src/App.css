@@ -1,1 +1,26 @@
-/* Intentional: base styles are defined in index.css, layout is handled by MUI components. */
+.navbar-brand:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: -31px;
+    left: 18px;
+    z-index: 0;
+    width: 223px;
+    height: 104px;
+    background: #fff;
+    border: 1px solid #aaa7a7;
+    -webkit-box-shadow: 1px 1px 0px rgba(0, 0, 0, 0), 2px 2px 0px rgba(0, 0, 0, 0.004), 3px 3px 0px rgba(0, 0, 0, 0.008), 4px 4px 0px rgba(0, 0, 0, 0.012), 5px 5px 0px rgba(0, 0, 0, 0.016), 6px 6px 0px rgba(0, 0, 0, 0.02), 7px 7px 0px rgba(0, 0, 0, 0.024), 8px 8px 0px rgba(0, 0, 0, 0.028), 9px 9px 0px rgba(0, 0, 0, 0.032), 10px 10px 0px rgba(0, 0, 0, 0.036), 11px 11px 0px rgba(0, 0, 0, 0.04), 12px 12px 0px rgba(0, 0, 0, 0.044), 13px 13px 0px rgba(0, 0, 0, 0.048), 14px 14px 0px rgba(0, 0, 0, 0.052), 15px 15px 0px rgba(0, 0, 0, 0.056), 16px 16px 0px rgba(0, 0, 0, 0.06), 17px 17px 0px rgba(0, 0, 0, 0.064), 18px 18px 0px rgba(0, 0, 0, 0.068);
+    -moz-box-shadow: 1px 1px 0px rgba(0, 0, 0, 0), 2px 2px 0px rgba(0, 0, 0, 0.004), 3px 3px 0px rgba(0, 0, 0, 0.008), 4px 4px 0px rgba(0, 0, 0, 0.012), 5px 5px 0px rgba(0, 0, 0, 0.016), 6px 6px 0px rgba(0, 0, 0, 0.02), 7px 7px 0px rgba(0, 0, 0, 0.024), 8px 8px 0px rgba(0, 0, 0, 0.028), 9px 9px 0px rgba(0, 0, 0, 0.032), 10px 10px 0px rgba(0, 0, 0, 0.036), 11px 11px 0px rgba(0, 0, 0, 0.04), 12px 12px 0px rgba(0, 0, 0, 0.044), 13px 13px 0px rgba(0, 0, 0, 0.048), 14px 14px 0px rgba(0, 0, 0, 0.052), 15px 15px 0px rgba(0, 0, 0, 0.056), 16px 16px 0px rgba(0, 0, 0, 0.06), 17px 17px 0px rgba(0, 0, 0, 0.064), 18px 18px 0px rgba(0, 0, 0, 0.068);
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0), 2px 2px 0px rgba(0, 0, 0, 0.004), 3px 3px 0px rgba(0, 0, 0, 0.008), 4px 4px 0px rgba(0, 0, 0, 0.012), 5px 5px 0px rgba(0, 0, 0, 0.016), 6px 6px 0px rgba(0, 0, 0, 0.02), 7px 7px 0px rgba(0, 0, 0, 0.024), 8px 8px 0px rgba(0, 0, 0, 0.028), 9px 9px 0px rgba(0, 0, 0, 0.032), 10px 10px 0px rgba(0, 0, 0, 0.036), 11px 11px 0px rgba(0, 0, 0, 0.04), 12px 12px 0px rgba(0, 0, 0, 0.044), 13px 13px 0px rgba(0, 0, 0, 0.048), 14px 14px 0px rgba(0, 0, 0, 0.052), 15px 15px 0px rgba(0, 0, 0, 0.056), 16px 16px 0px rgba(0, 0, 0, 0.06), 17px 17px 0px rgba(0, 0, 0, 0.064), 18px 18px 0px rgba(0, 0, 0, 0.068);
+    -webkit-transform: skew(-13deg);
+    -moz-transform: skew(-13deg);
+    -ms-transform: skew(-13deg);
+    -o-transform: skew(-13deg);
+    transform: skew(-13deg);
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    -moz-border-radius-bottomright: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }  

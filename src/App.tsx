@@ -186,7 +186,9 @@ function App() {
       <AppBar position="static" color="primary">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            ENIGMA Mail Dashboard
+            <div className="navbar-brand">
+              <img style={{ height: 46, position: "absolute", top: "20%", zIndex: 5}} src="./src/assets/logo.svg"/>
+            </div>
           </Typography>
           <Button color="inherit" variant="outlined" onClick={() => setCreateOpen(true)}>
             Загрузить письмо
@@ -301,7 +303,7 @@ function App() {
                           }
                         />
                       </TableCell>
-                      <TableCell>{getFirstNWords(mail.issueSummary, 20)}</TableCell>
+                      <TableCell>{getFirstNWords(mail.issueSummary, 10)}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>
@@ -374,7 +376,7 @@ function App() {
               {letterFile ? `Файл выбран: ${letterFile.name}` : 'Файл не выбран'}
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
-              В вебхук уходит либо только текст из поля выше, либо только выбранный файл.
+              На анализ пойдет либо только текст из поля выше, либо только выбранный файл.
             </Typography>
           </Stack>
         </DialogContent>
