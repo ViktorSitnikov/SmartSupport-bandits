@@ -159,13 +159,75 @@ export function aiResponseToMail(ai: AIResponse): Mail {
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 const issueSamples = [
-  'Не запускается газоанализатор после профилактики.',
-  'Требуется консультация по калибровке прибора.',
-  'Появляются ложные срабатывания датчика.',
+  'После замены сенсора прибор не проходит самотестирование (ошибка E03).',
+  'Нужно уточнить процедуру калибровки и рекомендуемую газовую смесь.',
+  'Ложные срабатывания в ночное время, подозреваем наводки/помехи по питанию.',
+  'Периодически пропадает связь по RS‑485, помогает перезапуск.',
+  'Сильно выросло время прогрева, показания «плавают» первые 10–15 минут.',
+  'Не сохраняются настройки порогов тревоги после выключения питания.',
 ]
 
-const deviceTypes = ['ГХ-200', 'Сигнал-7', 'Аналитик-М', 'ПГА-4']
+const deviceTypes = ['ГХ-200', 'Сигнал-7', 'Аналитик-М', 'ПГА-4', 'Аналитик‑М2', 'Сигнал‑7 Pro']
 const tones: EmotionalTone[] = ['positive', 'neutral', 'negative']
+
+const firstNames = ['Алексей', 'Иван', 'Дмитрий', 'Сергей', 'Андрей', 'Михаил', 'Павел', 'Анна', 'Екатерина', 'Мария', 'Ольга', 'Наталья']
+const lastNames = ['Иванов', 'Петров', 'Сидоров', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Соколов', 'Морозов', 'Новиков']
+const patronymics = ['Иванович', 'Петрович', 'Сергеевич', 'Алексеевич', 'Андреевич', 'Дмитриевич', 'Михайлович', 'Викторович', 'Олегович']
+
+const companies = [
+  'ООО «ГазСервис»',
+  'АО «ТеплоЭнерго»',
+  'ООО «ПромАвтоматика»',
+  'АО «НефтеХимМонтаж»',
+  'ООО «ИнжТех»',
+  'МУП «ГорТеплоСеть»',
+]
+
+const sites = [
+  'котельная №3',
+  'цех КИПиА',
+  'участок подготовки газа',
+  'насосная станция',
+  'лаборатория',
+  'склад ГСМ',
+]
+
+function pick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function makeFullName(): string {
+  return `${pick(lastNames)} ${pick(firstNames)} ${pick(patronymics)}`
+}
+
+function makeObjectName(): string {
+  return `${pick(companies)}, ${pick(sites)}`
+}
+
+function makePhone(): string {
+  // +7 9XX XXX-XX-XX
+  const a = Math.floor(Math.random() * 900 + 100)
+  const b = Math.floor(Math.random() * 900 + 100)
+  const c = Math.floor(Math.random() * 90 + 10)
+  const d = Math.floor(Math.random() * 90 + 10)
+  return `+7 ${a} ${b}-${c}-${d}`
+}
+
+function makeEmail(fullName: string): string {
+  const [last, first] = fullName.split(' ')
+  const slug = `${(first ?? 'user').toLowerCase()}.${(last ?? 'mail').toLowerCase()}`
+    .replace(/ё/g, 'e')
+    .replace(/[^a-z.]/g, '')
+  const domains = ['example.ru', 'corp.local', 'mail.ru', 'company.ru']
+  return `${slug}@${pick(domains)}`
+}
+
+function makeSerial(): string {
+  const year = String(new Date().getFullYear()).slice(-2)
+  const batch = Math.floor(Math.random() * 900 + 100)
+  const num = Math.floor(Math.random() * 900000 + 100000)
+  return `SN-${year}${batch}-${num}`
+}
 
 async function saveMail(mail: Mail): Promise<Mail> {
   return apiFetch<Mail>('/mails', {
@@ -233,25 +295,38 @@ export async function sendLetterToWebhook(
 export async function generateIncomingMail() {
   await delay(300)
 
-  const issueSummary = issueSamples[Math.floor(Math.random() * issueSamples.length)]
-  const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)]
-  const emotionalTone = tones[Math.floor(Math.random() * tones.length)]
-  const uid = Math.floor(Math.random() * 900 + 100)
+  const issueSummary = pick(issueSamples)
+  const deviceType = pick(deviceTypes)
+  const emotionalTone = pick(tones)
+
+  const fullName = makeFullName()
+  const objectName = makeObjectName()
+  const phone = makePhone()
+  const email = makeEmail(fullName)
+  const serialNumbers = makeSerial()
+
+  const ticket = Math.floor(Math.random() * 9000 + 1000)
+  const text = [
+    `Добрый день! Обращение №${ticket}.`,
+    `Прибор: ${deviceType}, заводской номер: ${serialNumbers}.`,
+    `Ситуация: ${issueSummary}`,
+    'Подскажите, пожалуйста, возможные причины и что проверить в первую очередь.',
+  ].join('\n')
 
   const incomingMail: Mail = {
     id: randomId('in'),
     date: new Date().toISOString(),
-    fullName: `Внешний Контакт ${uid}`,
-    objectName: `Объект #${uid}`,
-    phone: `+7 (9${Math.floor(Math.random() * 90 + 10)}) ${Math.floor(Math.random() * 900)}-${Math.floor(Math.random() * 90 + 10)}-${Math.floor(Math.random() * 90 + 10)}`,
-    email: `external${uid}@mail.local`,
-    serialNumbers: `SN-${Math.floor(Math.random() * 90000 + 10000)}`,
+    fullName,
+    objectName,
+    phone,
+    email,
+    serialNumbers,
     deviceType,
     emotionalTone,
     issueSummary,
     direction: 'in',
     read: false,
-    text: `Симуляция входящего письма #${uid}`,
+    text,
     supportResponse: null,
   }
 

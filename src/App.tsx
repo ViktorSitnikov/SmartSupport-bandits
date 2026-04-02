@@ -36,6 +36,9 @@ import {
 } from './api/mockMailApi'
 
 function App() {
+  const MOCK_LOGIN = 'admin'
+  const MOCK_PASSWORD = 'admin123'
+
   const [mails, setMails] = useState<Mail[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMail, setSelectedMail] = useState<Mail | null>(null)
@@ -46,8 +49,16 @@ function App() {
   const [newMailNoticeOpen, setNewMailNoticeOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [authed, setAuthed] = useState(() => localStorage.getItem('mockAuthed') === '1')
+  const [login, setLogin] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState<string | null>(null)
+
   useEffect(() => {
+    if (!authed) return
+
     const load = async () => {
+      setLoading(true)
       try {
         const data = await fetchMails()
         setMails(data)
@@ -59,9 +70,11 @@ function App() {
     }
 
     void load()
-  }, [])
+  }, [authed])
 
   useEffect(() => {
+    if (!authed) return
+
     const timerId = window.setInterval(async () => {
       try {
         const incomingMail = await generateIncomingMail()
@@ -73,7 +86,7 @@ function App() {
     }, 18000)
 
     return () => window.clearInterval(timerId)
-  }, [])
+  }, [authed])
 
   const stats = useMemo(() => {
     const total = mails.length
@@ -181,8 +194,79 @@ function App() {
       : text;
   };
 
+  const handleLoginSubmit = () => {
+    const l = login.trim()
+    if (l === MOCK_LOGIN && password === MOCK_PASSWORD) {
+      localStorage.setItem('mockAuthed', '1')
+      setAuthed(true)
+      setLogin('')
+      setPassword('')
+      setLoginError(null)
+      setError(null)
+      return
+    }
+    setLoginError('Неверный логин или пароль')
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('mockAuthed')
+    setAuthed(false)
+    setMails([])
+    setSelectedMail(null)
+    setCreateOpen(false)
+    setLetterText('')
+    setLetterFile(null)
+    setSubmitting(false)
+    setNewMailNoticeOpen(false)
+    setError(null)
+    setLoginError(null)
+  }
+
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', pb: 4 }}>
+      <Dialog
+        open={!authed}
+        onClose={() => undefined}
+        fullWidth
+        maxWidth="xs"
+        disableEscapeKeyDown
+      >
+        <DialogTitle>Вход</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Логин"
+              value={login}
+              onChange={(e) => {
+                setLogin(e.target.value)
+                setLoginError(null)
+              }}
+              autoFocus
+              fullWidth
+            />
+            <TextField
+              label="Пароль"
+              value={password}
+              type="password"
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setLoginError(null)
+              }}
+              fullWidth
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleLoginSubmit()
+              }}
+            />
+            {loginError ? <Alert severity="error">{loginError}</Alert> : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleLoginSubmit}>
+            Войти
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <AppBar position="static" color="primary">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -190,27 +274,33 @@ function App() {
               <img style={{ height: 46, position: "absolute", top: "20%", zIndex: 5}} src="./src/assets/logo.svg"/>
             </div>
           </Typography>
-          <Button color="inherit" variant="outlined" onClick={() => setCreateOpen(true)}>
+          <Button color="inherit" variant="outlined" onClick={() => setCreateOpen(true)} disabled={!authed}>
             Загрузить письмо
+          </Button>
+          <Button color="inherit" disabled={!authed} sx={{ ml: 1 }}>
+            {authed ? "Кирилл" : ""}
+          </Button>
+          <Button color="inherit" onClick={handleLogout} disabled={!authed} sx={{ ml: 1 }}>
+            Выйти
           </Button>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
         <Typography variant="h5" gutterBottom>
           Главная
         </Typography>
 
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 2 }}>
+            <Paper sx={{ p: 2, mb: 3 }}>
               <Typography variant="subtitle1" gutterBottom>
-                Письма по статусу
+                Распределение по типам приборов
               </Typography>
               <BarChart
                 height={240}
-                xAxis={[{ scaleType: 'band', data: ['Всего', 'Непрочитанные'] }]}
-                series={[{ data: [stats.total, stats.unread], color: '#1976d2' }]}
+                xAxis={[{ scaleType: 'band', data: stats.deviceLabels }]}
+                series={[{ data: stats.deviceValues, color: '#2e7d32' }]}
               />
             </Paper>
           </Grid>
@@ -234,16 +324,6 @@ function App() {
             </Paper>
           </Grid>
         </Grid>
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Распределение по типам приборов
-          </Typography>
-          <BarChart
-            height={250}
-            xAxis={[{ scaleType: 'band', data: stats.deviceLabels }]}
-            series={[{ data: stats.deviceValues, color: '#2e7d32' }]}
-          />
-        </Paper>
 
         <Paper>
           <Box sx={{ p: 2 }}>
